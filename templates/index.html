@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Truck Entry Management System</title>
+    <meta name="description" content="A premium and responsive web dashboard for managing truck trip details and driver cash entries.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        window.currentUser = {
+            username: "{{ user.username }}",
+            role: "{{ user.role }}",
+            display_name: "{{ user.display_name }}"
+        };
+    </script>
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="3" width="15" height="13"></rect>
+                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                    </svg>
+                </div>
+                <h2>FleetEntry</h2>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="welcome" id="btn-tab-welcome">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Welcome
+                </button>
+                {% if user.role == 'Owner' %}
+                <button class="nav-item" data-tab="dashboard" id="btn-tab-dashboard">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                        <rect x="3" y="3" width="7" height="9"></rect>
+                        <rect x="14" y="3" width="7" height="5"></rect>
+                        <rect x="14" y="12" width="7" height="9"></rect>
+                        <rect x="3" y="16" width="7" height="5"></rect>
+                    </svg>
+                    Dashboard
+                </button>
+                {% endif %}
+                <button class="nav-item" data-tab="trip-entry" id="btn-tab-trip-entry">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Trip Details Form
+                </button>
+                <button class="nav-item" data-tab="cash-entry" id="btn-tab-cash-entry">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                    Driver Cash Form
+                </button>
+                <button class="nav-item" data-tab="trip-list" id="btn-tab-trip-list">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                    Trip Directory
+                </button>
+                <button class="nav-item" data-tab="cash-list" id="btn-tab-cash-list">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                        <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                        <line x1="12" y1="10" x2="12" y2="10.01"></line>
+                        <line x1="12" y1="14" x2="12" y2="14.01"></line>
+                    </svg>
+                    Driver Cash Ledger
+                </button>
+                {% if user.role == 'Owner' %}
+                <button class="nav-item" data-tab="driver-advances" id="btn-tab-driver-advances">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    Driver Advances
+                </button>
+                <button class="nav-item" data-tab="expense-ledger" id="btn-tab-expense-ledger">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                    Expense Ledger
+                </button>
+                <button class="nav-item" data-tab="cash-report" id="btn-tab-cash-report">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Cash Flow Report
+                </button>
+                {% endif %}
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle Theme">
+                    <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="display: none;">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <span>Toggle Theme</span>
+                </button>
+                
+                <a href="/logout" class="logout-link" style="text-decoration: none; width: 100%;">
+                    <button class="theme-toggle logout-btn" id="logout-btn" aria-label="Logout">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="logout-icon">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </a>
+                
+                <div class="user-profile">
+                    <div class="avatar">{{ user.display_name[0] | upper }}</div>
+                    <div class="user-info">
+                        <span class="user-name">{{ user.display_name }}</span>
+                        <span class="user-role">{% if user.role == 'Owner' %}Owner / Administrator{% else %}Staff / Operations Team{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <main class="main-content">
+            <!-- Header bar -->
+            <header class="content-header">
+                <div class="header-title">
+                    <h1 id="page-title">Dashboard Overview</h1>
+                    <p id="page-subtitle">Real-time statistics & visual analytics</p>
+                </div>
+                <div class="header-actions">
+                    <div class="date-badge" id="current-date-badge">June 08, 2026</div>
+                </div>
+            </header>
+
+            <!-- VIEW: Welcome Showcase -->
+            <section id="view-welcome" class="tab-view active">
+                <div class="scroll-container">
+                    <div class="scroll-wrapper">
+                        <div class="scroll-header">
+                            <h2 class="welcome-title">Empower Your <span class="highlight-text">Fleet Operations</span></h2>
+                            <p class="welcome-subtitle">Experience next-generation telemetry, automated advances, and seamless cash-flow reconciliation.</p>
+                        </div>
+                        <div class="scroll-card">
+                            <div class="scroll-card-inner">
+                                <div class="preview-deck">
+                                    <div class="deck-header">
+                                        <div class="deck-title-group">
+                                            <div class="deck-dot"></div>
+                                            <span class="deck-title">FleetEntry Control Deck</span>
+                                        </div>
+                                        <span class="live-badge">LIVE SUMMARY</span>
+                                    </div>
+                                    <div class="deck-grid">
+                                        {% if user.role == 'Owner' %}
+                                        <div class="deck-panel">
+                                            <h4>Operational Stats</h4>
+                                            <div class="deck-stats">
+                                                <div class="deck-stat">
+                                                    <span class="stat-lbl">Freight Billed</span>
+                                                    <span class="stat-val text-blue" id="welcome-freight">₹0.00</span>
+                                                </div>
+                                                <div class="deck-stat">
+                                                    <span class="stat-lbl">Total Cash Collected</span>
+                                                    <span class="stat-val text-emerald" id="welcome-received">₹0.00</span>
+                                                </div>
+                                                <div class="deck-stat">
+                                                    <span class="stat-lbl">Outstanding Balance</span>
+                                                    <span class="stat-val text-red" id="welcome-pending">₹0.00</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <div class="deck-panel">
+                                            <h4>Operations Panel</h4>
+                                            <div class="deck-stats">
+                                                <div class="deck-stat">
+                                                    <span class="stat-lbl">Daily Trip Entries</span>
+                                                    <span class="stat-val text-blue">Active</span>
+                                                </div>
+                                                <div class="deck-stat">
+                                                    <span class="stat-lbl">Cash Settlements</span>
+                                                    <span class="stat-val text-emerald">Enabled</span>
+                                                </div>
+                                                <div class="deck-stat">
+                                                    <span class="stat-lbl">System Status</span>
+                                                    <span class="stat-val text-green">Online</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        <div class="deck-panel glass-panel">
+                                            <h4>Quick Access</h4>
+                                            <p class="deck-desc">
+                                                {% if user.role == 'Owner' %}
+                                                Manage trip directory, track driver expenses, and reconcile cash flow ledgers from one high-performance dashboard.
+                                                {% else %}
+                                                Manage trip directory logs and record driver cash entries.
+                                                {% endif %}
+                                            </p>
+                                            <button class="cta-button" onclick="switchTab('{% if user.role == 'Owner' %}dashboard{% else %}trip-list{% endif %}')" data-tab="{% if user.role == 'Owner' %}dashboard{% else %}trip-list{% endif %}">
+                                                <span>{% if user.role == 'Owner' %}Enter Dashboard{% else %}Enter Trip Directory{% endif %}</span>
+                                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="deck-bg-visual">
+                                        <div class="visual-grid-overlay"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: Dashboard -->
+            {% if user.role == 'Owner' %}
+            <section id="view-dashboard" class="tab-view">
+                <div class="metrics-grid">
+                    <div class="metric-card card-glow-green">
+                        <div class="metric-header">
+                            <span class="metric-label">Total Freight</span>
+                            <div class="metric-icon bg-green-dim">₹</div>
+                        </div>
+                        <h3 class="metric-val" id="summary-total-freight">₹0.00</h3>
+                        <span class="metric-change" id="summary-trips-count">0 Trips Recorded</span>
+                    </div>
+                    <div class="metric-card card-glow-emerald">
+                        <div class="metric-header">
+                            <span class="metric-label">Total Received</span>
+                            <div class="metric-icon bg-emerald-dim">✓</div>
+                        </div>
+                        <h3 class="metric-val" id="summary-total-received">₹0.00</h3>
+                        <span class="metric-change text-emerald">Received Amount from Customers</span>
+                    </div>
+                    <div class="metric-card card-glow-red">
+                        <div class="metric-header">
+                            <span class="metric-label">Pending Balance</span>
+                            <div class="metric-icon bg-red-dim">!</div>
+                        </div>
+                        <h3 class="metric-val" id="summary-total-pending">₹0.00</h3>
+                        <span class="metric-change text-red" id="pending-alert-text">To be Collected</span>
+                    </div>
+                    <div class="metric-card card-glow-blue">
+                        <div class="metric-header">
+                            <span class="metric-label">Driver Cash Expenses</span>
+                            <div class="metric-icon bg-blue-dim">💸</div>
+                        </div>
+                        <h3 class="metric-val" id="summary-total-expenses">₹0.00</h3>
+                        <span class="metric-change text-blue" id="summary-advances-sum">Advances: ₹0.00</span>
+                    </div>
+                </div>
+
+                <!-- Dashboard Charts -->
+                <div class="dashboard-charts-grid">
+                    <div class="chart-container glass-card">
+                        <h3>Freight Billing & Collections</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="freightChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container glass-card">
+                        <h3>Driver Expenses Distribution</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Logs Summary -->
+                <div class="dashboard-tables-grid">
+                    <div class="table-card glass-card">
+                        <div class="card-header">
+                            <h3>Recent Trips</h3>
+                            <button class="btn-text" onclick="switchTab('trip-list')">View All</button>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="data-table" id="recent-trips-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Route</th>
+                                        <th>Customer</th>
+                                        <th>Freight</th>
+                                        <th>Pending</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="5" class="placeholder-text">Loading recent trips...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="table-card glass-card">
+                        <div class="card-header">
+                            <h3>Recent Cash Flow Logs</h3>
+                            <button class="btn-text" onclick="switchTab('cash-list')">View All</button>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="data-table" id="recent-cash-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Driver (Truck)</th>
+                                        <th>Opening</th>
+                                        <th>Offline Adv</th>
+                                        <th>Online Adv</th>
+                                        <th>Expenses</th>
+                                        <th>Calc. Closing</th>
+                                        <th>Actual Closing</th>
+                                        <th>Diff</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="10" class="placeholder-text">Loading cash logs...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- VIEW: Trip Details Form -->
+            <section id="view-trip-entry" class="tab-view">
+                <div class="form-container-card glass-card">
+                    <div class="form-header">
+                        <h2>Record New Trip</h2>
+                        <p>Fill out the fields to add a new truck trip entry to the directory.</p>
+                    </div>
+                    <form id="trip-details-form" class="responsive-form" novalidate>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="trip-date">Date</label>
+                                <input type="date" id="trip-date" name="date" required autocomplete="off">
+                                <div class="error-feedback" id="err-trip-date">Please pick a date.</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="trip-customer">Customer Name</label>
+                                <input type="text" id="trip-customer" name="customer_name" required placeholder="e.g. Aditya Transport">
+                                <div class="error-feedback" id="err-trip-customer">Customer name is required.</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="trip-from">From (Source City)</label>
+                                <input type="text" id="trip-from" name="from_city" required placeholder="e.g. Mumbai">
+                                <div class="error-feedback" id="err-trip-from">Source city is required.</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="trip-to">To (Destination City)</label>
+                                <input type="text" id="trip-to" name="to_city" required placeholder="e.g. Delhi">
+                                <div class="error-feedback" id="err-trip-to">Destination city is required.</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="trip-load-type">Load Type</label>
+                                <input type="text" id="trip-load-type" name="load_type" required placeholder="e.g. Industrial Steel / Food Products">
+                                <div class="error-feedback" id="err-trip-load-type">Specify load type.</div>
+                            </div>
+                            <div class="form-group">
+                                <!-- empty space or secondary column -->
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="trip-freight">Freight Amount (₹)</label>
+                                <input type="number" id="trip-freight" name="freight_amount" required min="0" placeholder="0.00" step="any">
+                                <div class="error-feedback" id="err-trip-freight">Freight amount must be a positive number.</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="trip-received">Received Amount (₹)</label>
+                                <input type="number" id="trip-received" name="received_amount" required min="0" placeholder="0.00" step="any">
+                                <div class="error-feedback" id="err-trip-received">Received amount must be a positive number.</div>
+                            </div>
+                            <div class="form-group highlight-input">
+                                <label for="trip-pending">Calculated Pending Amount (₹)</label>
+                                <input type="number" id="trip-pending" name="pending_amount" readonly placeholder="0.00" class="readonly-input">
+                                <span class="calc-label">Automatic Formula: Freight - Received</span>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="resetForm('trip-details-form')">Clear Form</button>
+                            <button type="submit" class="btn-primary" id="btn-save-trip">
+                                <span class="btn-spinner" id="spinner-trip" style="display: none;"></span>
+                                Save Trip Entry
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- VIEW: Driver Cash Form -->
+            <section id="view-cash-entry" class="tab-view">
+                <div class="form-container-card glass-card">
+                    <div class="form-header">
+                        <h2>Record Driver Cash Entry</h2>
+                        <p>Track cash allocations, fuel purchases, and trip expenses for driver ledger logs.</p>
+                    </div>
+                    <form id="driver-cash-form" class="responsive-form" novalidate>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cash-date">Date</label>
+                                <input type="date" id="cash-date" name="date" required autocomplete="off">
+                                <div class="error-feedback" id="err-cash-date">Please pick a date.</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="cash-truck-no">Truck Number</label>
+                                <input type="text" id="cash-truck-no" name="truck_no" required placeholder="e.g. MH-12-PQ-9876">
+                                <div class="error-feedback" id="err-cash-truck-no">Truck number is required.</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="cash-driver-name">Driver Name</label>
+                                <input type="text" id="cash-driver-name" name="driver_name" required placeholder="e.g. Ramesh Singh">
+                                <div class="error-feedback" id="err-cash-driver-name">Driver name is required.</div>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="form-section-title">Cash & Advances</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cash-opening">Opening Cash (₹)</label>
+                                <input type="number" id="cash-opening" name="opening_cash" required min="0" placeholder="0.00" step="any">
+                                <div class="error-feedback" id="err-cash-opening">Opening cash is required.</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="cash-advance-offline">Advance Received (Offline/Cash) (₹)</label>
+                                <input type="number" id="cash-advance-offline" name="advance_received_offline" required min="0" placeholder="0.00" step="any">
+                                <div class="error-feedback" id="err-cash-advance-offline">Offline advance is required.</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="cash-advance-online">Advance Received (Online/Digital) (₹)</label>
+                                <input type="number" id="cash-advance-online" name="advance_received_online" required min="0" placeholder="0.00" step="any">
+                                <div class="error-feedback" id="err-cash-advance-online">Online advance is required.</div>
+                            </div>
+                        </div>
+
+                        <div class="form-section-title">Expenses Details</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cash-diesel">Diesel Expense (₹)</label>
+                                <input type="number" id="cash-diesel" name="diesel_expense" required min="0" placeholder="0.00" step="any">
+                            </div>
+                            <div class="form-group">
+                                <label for="cash-maintenance">Maintenance Expense (₹)</label>
+                                <input type="number" id="cash-maintenance" name="maintenance_expense" required min="0" placeholder="0.00" step="any">
+                            </div>
+                            <div class="form-group">
+                                <label for="cash-food">Food Expense (₹)</label>
+                                <input type="number" id="cash-food" name="food_expense" required min="0" placeholder="0.00" step="any">
+                            </div>
+                            <div class="form-group">
+                                <label for="cash-other">Other Expense (₹)</label>
+                                <input type="number" id="cash-other" name="other_expense" required min="0" placeholder="0.00" step="any">
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cash-remarks">Remarks / Notes</label>
+                                <input type="text" id="cash-remarks" name="remarks" placeholder="e.g. Trip expenses settled, highway toll, etc.">
+                            </div>
+                            <div class="form-group highlight-input">
+                                <label for="cash-total-expense">Total Offline Expenses (₹)</label>
+                                <input type="number" id="cash-total-expense" readonly placeholder="0.00" class="readonly-input">
+                            </div>
+                            <div class="form-group highlight-input bg-highlight-closing">
+                                <label for="cash-closing">Calculated Closing Cash (₹)</label>
+                                <input type="number" id="cash-closing" name="closing_cash" readonly placeholder="0.00" class="readonly-input">
+                                <span class="calc-label">Formula: Opening + Offline Advance - Expenses</span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cash-actual-closing">Actual Closing Cash (₹)</label>
+                                <input type="number" id="cash-actual-closing" name="actual_closing_cash" required min="0" placeholder="0.00" step="any">
+                                <div class="error-feedback" id="err-cash-actual-closing">Actual closing cash is required.</div>
+                            </div>
+                            <div class="form-group highlight-input bg-highlight-diff">
+                                <label for="cash-difference">Cash Difference (₹)</label>
+                                <input type="number" id="cash-difference" readonly placeholder="0.00" class="readonly-input">
+                                <span class="calc-label">Formula: Actual Closing - Calculated Closing</span>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="resetForm('driver-cash-form')">Clear Form</button>
+                            <button type="submit" class="btn-primary" id="btn-save-cash">
+                                <span class="btn-spinner" id="spinner-cash" style="display: none;"></span>
+                                Save Cash Record
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- VIEW: Trip Directory Table -->
+            <section id="view-trip-list" class="tab-view">
+                <div class="table-card glass-card">
+                    <div class="table-header-filters">
+                        <div class="search-box">
+                            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" id="search-trips" placeholder="Search trips by route, customer, date...">
+                        </div>
+                        <div class="filter-actions">
+                            <!-- Can export or add custom filtering here -->
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table" id="all-trips-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Load Type</th>
+                                    <th>Freight (₹)</th>
+                                    <th>Customer</th>
+                                    <th>Received (₹)</th>
+                                    <th>Pending Balance (₹)</th>
+                                    {% if user.role == 'Owner' %}
+                                    <th>Actions</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="8" class="placeholder-text">Loading trips...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: Driver Cash Ledger Table -->
+            <section id="view-cash-list" class="tab-view">
+                <div class="table-card glass-card">
+                    <div class="table-header-filters">
+                        <div class="search-box">
+                            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" id="search-cash" placeholder="Search cash ledger by driver, truck, date...">
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table" id="all-cash-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Truck No</th>
+                                    <th>Driver Name</th>
+                                    <th>Opening (₹)</th>
+                                    <th>Offline Adv (₹)</th>
+                                    <th>Online Adv (₹)</th>
+                                    <th>Diesel (₹)</th>
+                                    <th>Maint. (₹)</th>
+                                    <th>Food (₹)</th>
+                                    <th>Other (₹)</th>
+                                    <th>Total Exp (₹)</th>
+                                    <th>Calc. Closing (₹)</th>
+                                    <th>Actual Closing (₹)</th>
+                                    <th>Difference (₹)</th>
+                                    <th>Remarks</th>
+                                    {% if user.role == 'Owner' %}
+                                    <th>Actions</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="{% if user.role == 'Owner' %}16{% else %}15{% endif %}" class="placeholder-text">Loading cash ledger...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: Driver Advances -->
+            {% if user.role == 'Owner' %}
+            <section id="view-driver-advances" class="tab-view">
+                <div class="table-card glass-card">
+                    <div class="table-header-filters">
+                        <h3>Advances Summary by Driver</h3>
+                        <p class="subtitle">Aggregated advance amounts given out across driver trips.</p>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table" id="driver-advances-table">
+                            <thead>
+                                <tr>
+                                    <th>Driver Name</th>
+                                    <th>Offline Advance Received (₹)</th>
+                                    <th>Online Advance Received (₹)</th>
+                                    <th>Total Advance Received (₹)</th>
+                                    <th>Number of Settlements</th>
+                                    <th>Last Settlement Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="6" class="placeholder-text">Loading driver advances summary...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: Expense Ledger -->
+            <section id="view-expense-ledger" class="tab-view">
+                <div class="table-card glass-card">
+                    <div class="table-header-filters">
+                        <div class="search-box">
+                            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" id="search-expenses" placeholder="Filter expenses by driver, truck...">
+                        </div>
+                        <div class="select-wrapper">
+                            <label for="filter-expense-type" class="visually-hidden">Filter by Category</label>
+                            <select id="filter-expense-type">
+                                <option value="ALL">All Categories</option>
+                                <option value="Diesel">Diesel</option>
+                                <option value="Maintenance">Maintenance</option>
+                                <option value="Food">Food</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table" id="expense-ledger-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Truck No</th>
+                                    <th>Driver Name</th>
+                                    <th>Expense Category</th>
+                                    <th>Amount (₹)</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="6" class="placeholder-text">Loading expense ledger...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: Cash Flow Report -->
+            <section id="view-cash-report" class="tab-view">
+                <div class="table-card glass-card">
+                    <div class="table-header-filters">
+                        <h3>Fleet Cash Flow Analysis</h3>
+                        <p class="subtitle">Complete ledger matching opening cash and advances to expenses and final closing cash.</p>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table" id="cash-report-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Truck No</th>
+                                    <th>Driver Name</th>
+                                    <th>Opening Balance (₹)</th>
+                                    <th>Offline Advance (+) (₹)</th>
+                                    <th>Online Advance (+) (₹)</th>
+                                    <th>Total Offline Expenses (-) (₹)</th>
+                                    <th>Calculated Closing (=) (₹)</th>
+                                    <th>Actual Closing (₹)</th>
+                                    <th>Cash Difference (₹)</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="11" class="placeholder-text">Loading cash flow report...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            {% endif %}
+        </main>
+    </div>
+
+    <!-- Deletion Confirmation Dialog -->
+    <dialog id="delete-confirm-dialog" closedby="any" class="confirm-dialog" aria-labelledby="dialog-title">
+        <div class="confirm-dialog-content">
+            <h3 id="dialog-title">Confirm Deletion</h3>
+            <p id="delete-confirm-message">Are you sure you want to delete this entry? This action cannot be undone.</p>
+            <div class="dialog-actions">
+                <button type="button" class="btn-secondary" id="btn-cancel-delete">Cancel</button>
+                <button type="button" class="btn-primary btn-danger-action" id="btn-confirm-delete">Delete</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Toast Notification container -->
+    <div class="toast-container" id="toast-container"></div>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

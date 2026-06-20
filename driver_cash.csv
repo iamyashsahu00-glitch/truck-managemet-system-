@@ -1,0 +1,5 @@
+Date,Truck No,Driver Name,Opening Cash,Offline Advance Received,Online Advance Received,Diesel Expense,Maintenance Expense,Food Expense,Other Expense,Total Offline Expenses,Calculated Closing Cash,Actual Closing Cash,Cash Difference,Remarks
+08-08-2026,6868689,y,1000.0,22300.0,0.0,10000.0,6200.0,500.0,700.0,17400.0,5900.0,5900.0,0.0,good
+08-06-2026,MH-12-RS-5678,Satish Kumar,2000.0,8000.0,0.0,5000.0,1200.0,600.0,400.0,7200.0,2800.0,2800.0,0.0,
+09-06-2026,MH-12-RS-5678,Satish Kumar,999.0,22000.0,0.0,3000.0,2000.0,1000.0,1000.0,7000.0,15999.0,15999.0,0.0,
+10-06-2026,MH-12-AB-1234,Harish Sharma,3000.0,10000.0,5000.0,4000.0,1000.0,500.0,500.0,6000.0,7000.0,7000.0,0.0,verified CLI entry
